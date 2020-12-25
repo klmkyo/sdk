@@ -19,7 +19,73 @@ import java.net.URL
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class Scrapper {
+class Scrapper private constructor(
+    val logLevel: HttpLoggingInterceptor.Level,
+    val androidVersion: String,
+    val buildTag: String,
+    val ssl: Boolean,
+    val host: String,
+    val loginType: LoginType,
+    val symbol: String,
+    val email: String,
+    val password: String,
+    val schoolSymbol: String,
+    val studentId: Int,
+    val classId: Int,
+    val diaryId: Int,
+    val schoolYear: Int,
+    val emptyCookieJarInterceptor: Boolean,
+    val appInterceptors: List<Pair<Interceptor, Boolean>>
+) {
+
+    class Builder {
+        var logLevel: HttpLoggingInterceptor.Level = HttpLoggingInterceptor.Level.BASIC
+        var androidVersion: String = "5.1"
+        var buildTag: String = "SM-J500H Build/LMY48B"
+        var scrapperBaseUrl: String = "https://fakelog.cf"
+            set(value) {
+                ssl = value.startsWith("https")
+                host = URL(value).let { "${it.host}:${it.port}".removeSuffix(":-1") }
+                field = value
+            }
+        var host: String = ""
+        var loginType: LoginType = LoginType.AUTO
+        var symbol: String = "Default"
+        var email: String = ""
+        var ssl: Boolean = false // todo
+        var password: String = ""
+        var schoolSymbol: String = ""
+        var studentId: Int = 0
+        var classId: Int = 0
+        var diaryId: Int = 0
+        var schoolYear: Int = 0
+        var emptyCookieJarInterceptor: Boolean = false
+        var appInterceptors: List<Pair<Interceptor, Boolean>> = emptyList()
+
+        fun build(action: Builder.() -> Unit): Scrapper {
+            action()
+            return build()
+        }
+
+        fun build() = Scrapper(
+            logLevel = logLevel,
+            androidVersion = androidVersion,
+            buildTag = buildTag,
+            ssl = ssl,
+            host = host,
+            loginType = loginType,
+            symbol = symbol,
+            email = email,
+            password = password,
+            schoolSymbol = schoolSymbol,
+            classId = classId,
+            diaryId = diaryId,
+            schoolYear = schoolYear,
+            studentId = studentId,
+            emptyCookieJarInterceptor = emptyCookieJarInterceptor,
+            appInterceptors = appInterceptors
+        )
+    }
 
     // TODO: refactor
     enum class LoginType {
@@ -32,123 +98,12 @@ class Scrapper {
         ADFSLightCufs
     }
 
-    private val changeManager = resettableManager()
-
-    var logLevel: HttpLoggingInterceptor.Level = HttpLoggingInterceptor.Level.BASIC
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    var baseUrl: String = "https://fakelog.cf"
-        set(value) {
-            field = value
-            ssl = baseUrl.startsWith("https")
-            host = URL(value).let { "${it.host}:${it.port}".removeSuffix(":-1") }
-        }
-
-    var ssl: Boolean = true
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    var host: String = "fakelog.cf"
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    var loginType: LoginType = LoginType.AUTO
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    var symbol: String = "Default"
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    var email: String = ""
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    var password: String = ""
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    var schoolSymbol: String = ""
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    var studentId: Int = 0
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    var classId: Int = 0
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    var diaryId: Int = 0
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    var schoolYear: Int = 0
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    var emptyCookieJarInterceptor: Boolean = false
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    /**
-     * @see <a href="https://deviceatlas.com/blog/most-popular-android-smartphones#poland">The most popular Android phones - 2018</a>
-     * @see <a href="http://www.tera-wurfl.com/explore/?action=wurfl_id&id=samsung_sm_j500h_ver1">Tera-WURFL Explorer - Samsung SM-J500H (Galaxy J5)</a>
-     */
-    var androidVersion: String = "5.1"
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    var buildTag: String = "SM-J500H Build/LMY48B"
-        set(value) {
-            if (field != value) changeManager.reset()
-            field = value
-        }
-
-    private val appInterceptors: MutableList<Pair<Interceptor, Boolean>> = mutableListOf()
-
-    fun addInterceptor(interceptor: Interceptor, network: Boolean = false) {
-        appInterceptors.add(interceptor to network)
-    }
-
-    private val schema by resettableLazy(changeManager) { "http" + if (ssl) "s" else "" }
-
-    private val normalizedSymbol by resettableLazy(changeManager) { if (symbol.isBlank()) "Default" else symbol.getNormalizedSymbol() }
-
+    private val schema get() = "http" + if (ssl) "s" else ""
+    private val normalizedSymbol get() = if (symbol.isBlank()) "Default" else symbol.getNormalizedSymbol()
     private val okHttpFactory by lazy { OkHttpClientBuilderFactory() }
 
-    private val serviceManager by resettableLazy(changeManager) {
-        ServiceManager(
+    private val serviceManager
+        get() = ServiceManager(
             okHttpClientBuilderFactory = okHttpFactory,
             logLevel = logLevel,
             loginType = loginType,
@@ -169,11 +124,13 @@ class Scrapper {
                 setInterceptor(interceptor, isNetwork)
             }
         }
+
+    private val account by lazy {
+        AccountRepository(serviceManager.getAccountService())
     }
 
-    private val account by lazy { AccountRepository(serviceManager.getAccountService()) }
-
-    private val register by resettableLazy(changeManager) {
+    // todo: maybe inside getStudents()?
+    private val register by lazy {
         RegisterRepository(
             normalizedSymbol, email, password,
             LoginHelper(loginType, schema, host, normalizedSymbol, serviceManager.getCookieManager(), serviceManager.getLoginService()),
@@ -184,25 +141,23 @@ class Scrapper {
         )
     }
 
-    private val studentStart by resettableLazy(changeManager) {
-        if (0 == studentId) throw ScrapperException("Student id is not set")
-        if (0 == classId) throw ScrapperException("Class id is not set")
+    private val studentStart by lazy {
         StudentStartRepository(
-            studentId = studentId,
-            classId = classId,
+            studentId = studentId.takeIf { it != 0 } ?: throw ScrapperException("Student id is not set"),
+            classId = classId.takeIf { it != 0 } ?: throw ScrapperException("Class id is not set"),
             api = serviceManager.getStudentService(withLogin = true, studentInterceptor = false)
         )
     }
 
-    private val student by resettableLazy(changeManager) {
+    private val student by lazy {
         StudentRepository(serviceManager.getStudentService())
     }
 
-    private val messages by resettableLazy(changeManager) {
+    private val messages by lazy {
         MessagesRepository(serviceManager.getMessagesService())
     }
 
-    private val homepage by resettableLazy(changeManager) {
+    private val homepage by lazy {
         HomepageRepository(serviceManager.getHomepageService())
     }
 

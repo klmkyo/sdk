@@ -4,6 +4,7 @@ import io.github.wulkanowy.sdk.scrapper.attendance.AttendanceCategory
 import io.github.wulkanowy.sdk.scrapper.messages.Folder
 import io.github.wulkanowy.sdk.scrapper.messages.Recipient
 import kotlinx.coroutines.runBlocking
+import okhttp3.Interceptor
 import okhttp3.logging.HttpLoggingInterceptor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -15,11 +16,11 @@ import java.time.Month
 @Ignore
 class ScrapperRemoteTest : BaseTest() {
 
-    private var api = Scrapper()
+    private lateinit var sdk: Scrapper
 
     @Before
     fun setUp() {
-        api.apply {
+        sdk = Scrapper.Builder().build {
             logLevel = HttpLoggingInterceptor.Level.BASIC
             loginType = Scrapper.LoginType.STANDARD
             ssl = true
@@ -33,16 +34,16 @@ class ScrapperRemoteTest : BaseTest() {
             classId = 1
             androidVersion = "9.0"
             buildTag = "Wulkanowy"
-            addInterceptor({
+            appInterceptors = listOf(Interceptor {
                 println("Request event ${it.request().url().host()}")
                 it.proceed(it.request())
-            }, true)
+            } to true)
         }
     }
 
     @Test
     fun getPasswordResetCaptchaCode() {
-        val code = runBlocking { api.getPasswordResetCaptcha("https://fakelog.cf", "Default") }
+        val code = runBlocking { sdk.getPasswordResetCaptcha("https://fakelog.cf", "Default") }
 
         assertEquals("https://cufs.fakelog.cf/Default/AccountManage/UnlockAccount", code.first)
         assertEquals("6LeAGMYUAAAAAMszd5VWZTEb5WQHqsNT1F4GCqUd", code.second)
@@ -51,7 +52,7 @@ class ScrapperRemoteTest : BaseTest() {
     @Test
     fun sendPasswordResetRequest() {
         val res = runBlocking {
-            api.sendPasswordResetRequest("https://fakelog.cf",
+            sdk.sendPasswordResetRequest("https://fakelog.cf",
                 "Default",
                 "jan@fakelog.cf",
                 "03AOLTBLQRPyr0pWvWLRAgD4hRLfxktoqD2IVweeMuXwbkpR_8S9YQtcS3cAXqUOyEw3NxfvwzV0lTjgFWyl8j3UXGQpsc2nvQcqIofj1N8DYfxvtZO-h24W_S0Z9-fDnfXErd7vERS-Ny4d5IU1FupBAEKvT8rrf3OA3GYYbMM7TwB8b_o9Tt192TqYnSxkyIYE4UdaZnLBA0KIXxlBAoqM6QGlPEsSPK9gmCGx-0hn68w-UBQkv_ghRruf4kpv2Shw5emcP-qHBlv3YjAagsb_358K0v8uGJeyLrx4dXN9Ky02TXFMKYWNHz29fjhfunxT73u_PrsLj56f-MjOXrqO894NkUlJ7RkTTclwIsqXtJ794LEBH--mtsqZBND0miR5-odmZszqiNB3V5UsS5ObsqF_fWMl2TCWyNTTvF4elOGwOEeKiumVpjB6e740COxvxN3vbkNWxP9eeghpd5nPN5l2wUV3VL2R5s44TbqHqkrkNpUOd3h7efs3cQtCfGc-tCXoqLC26LxT7aztvKpjXMuqGEf-7wbQ")
@@ -62,7 +63,7 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun studentsTest() {
-        val students = runBlocking { api.getStudents() }
+        val students = runBlocking { sdk.getStudents() }
 
         students[0].run {
             assertEquals("powiatwulkanowy", symbol)
@@ -79,7 +80,7 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun semestersTest() {
-        val semesters = runBlocking { api.getSemesters() }
+        val semesters = runBlocking { sdk.getSemesters() }
 
         semesters[0].run {
             assertEquals(15, diaryId)
@@ -109,7 +110,7 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun attendanceTest() {
-        val attendance = runBlocking { api.getAttendance(getLocalDate(2018, 10, 1)) }
+        val attendance = runBlocking { sdk.getAttendance(getLocalDate(2018, 10, 1)) }
 
         attendance[0].run {
             assertEquals(1, number)
@@ -132,7 +133,7 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun getSubjects() {
-        val subjects = runBlocking { api.getSubjects() }
+        val subjects = runBlocking { sdk.getSubjects() }
 
         assertEquals(17, subjects.size)
 
@@ -144,7 +145,7 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun attendanceSummaryTest() {
-        val attendance = runBlocking { api.getAttendanceSummary() }
+        val attendance = runBlocking { sdk.getAttendanceSummary() }
 
         assertEquals(10, attendance.size)
 
@@ -164,7 +165,7 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun examsTest() {
-        val exams = runBlocking { api.getExams(getLocalDate(2018, 5, 7)) }
+        val exams = runBlocking { sdk.getExams(getLocalDate(2018, 5, 7)) }
 
         exams[0].run {
             assertEquals(getDate(2018, 5, 7), date)
@@ -180,7 +181,7 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun homeworkTest() {
-        val homework = runBlocking { api.getHomework(getLocalDate(2018, 9, 11)) }
+        val homework = runBlocking { sdk.getHomework(getLocalDate(2018, 9, 11)) }
 
         homework[1].run {
             assertEquals(getDate(2018, 9, 11), date)
@@ -194,7 +195,7 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun notesTest() {
-        val notes = runBlocking { api.getNotes() }
+        val notes = runBlocking { sdk.getNotes() }
 
         notes[0].run {
             assertEquals(getDate(2018, 1, 16), date)
@@ -207,7 +208,7 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun gradesTest() {
-        val grades = runBlocking { api.getGradesDetails(865) }
+        val grades = runBlocking { sdk.getGradesDetails(865) }
 
         grades[5].run {
             assertEquals("Religia", subject)
@@ -229,7 +230,7 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun gradesSummaryTest() {
-        val summary = runBlocking { api.getGradesSummary(865) }
+        val summary = runBlocking { sdk.getGradesSummary(865) }
 
         summary[2].run {
             assertEquals("Etyka", name)
@@ -252,19 +253,19 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun gradesStatisticsTest() {
-        val stats = runBlocking { api.getGradesPartialStatistics(321) }
+        val stats = runBlocking { sdk.getGradesPartialStatistics(321) }
 
         assertEquals("Język polski", stats[0].subject)
         assertEquals("Matematyka", stats[7].subject)
 
-        val annual = runBlocking { api.getGradesSemesterStatistics(123) }
+        val annual = runBlocking { sdk.getGradesSemesterStatistics(123) }
 
         assertEquals("Język angielski", annual[0].subject)
     }
 
     @Test
     fun teachersTest() {
-        val teachers = runBlocking { api.getTeachers() }
+        val teachers = runBlocking { sdk.getTeachers() }
 
         assertEquals("Historia", teachers[1].subject)
         assertEquals("Aleksandra Krajewska", teachers[1].name)
@@ -273,7 +274,7 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun schoolTest() {
-        val school = runBlocking { api.getSchool() }
+        val school = runBlocking { sdk.getSchool() }
 
         assertEquals("Publiczna szkoła Wulkanowego nr 1 w fakelog.cf", school.name)
     }
@@ -314,35 +315,35 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun messagesTest() {
-        val units = runBlocking { api.getReportingUnits() }
+        val units = runBlocking { sdk.getReportingUnits() }
         assertEquals(1, units.size)
 
-        val recipients = runBlocking { api.getRecipients(6) }
+        val recipients = runBlocking { sdk.getRecipients(6) }
         assertEquals(10, recipients.size)
 
-        val messages = runBlocking { api.getMessages(Folder.RECEIVED) }
+        val messages = runBlocking { sdk.getMessages(Folder.RECEIVED) }
         assertEquals(2, messages.size)
 
-        val inbox = runBlocking { api.getReceivedMessages(getLocalDateTime(2015, 10, 5)) }
+        val inbox = runBlocking { sdk.getReceivedMessages(getLocalDateTime(2015, 10, 5)) }
         assertEquals(2, inbox.size)
 
-        val sent = runBlocking { api.getSentMessages() }
+        val sent = runBlocking { sdk.getSentMessages() }
         assertEquals(1, sent.size)
 
-        val trash = runBlocking { api.getDeletedMessages() }
+        val trash = runBlocking { sdk.getDeletedMessages() }
         assertEquals(1, trash.size)
 
-        val mRecipients = runBlocking { api.getMessageRecipients(trash[0].messageId ?: 0) }
+        val mRecipients = runBlocking { sdk.getMessageRecipients(trash[0].messageId ?: 0) }
         assertEquals(2, mRecipients.size)
 
-        val details = runBlocking { api.getMessageDetails(trash[0].messageId ?: 0, trash[0].folderId) }
+        val details = runBlocking { sdk.getMessageDetails(trash[0].messageId ?: 0, trash[0].folderId) }
         assertEquals(27214, details.id)
     }
 
     @Test
     fun sendMessage() {
         runBlocking {
-            api.sendMessage("Temat wiadomości", "Treść",
+            sdk.sendMessage("Temat wiadomości", "Treść",
                 listOf(Recipient("0", "Kowalski Jan", 0, 0, 2, "hash"))
             )
         }
@@ -350,14 +351,14 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun devicesTest() {
-        val devices = runBlocking { api.getRegisteredDevices() }
+        val devices = runBlocking { sdk.getRegisteredDevices() }
 
         assertEquals(2, devices.size)
     }
 
     @Test
     fun tokenTest() {
-        val tokenizer = runBlocking { api.getToken() }
+        val tokenizer = runBlocking { sdk.getToken() }
 
         tokenizer.run {
             assertEquals("FK100000", token)
@@ -368,14 +369,14 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun unregisterTest() {
-        val unregister = runBlocking { api.unregisterDevice(1234) }
+        val unregister = runBlocking { sdk.unregisterDevice(1234) }
 
         assertEquals(true, unregister)
     }
 
     @Test
     fun timetableTest() {
-        val timetable = runBlocking { api.getTimetableNormal(getLocalDate(2018, 9, 17)) }
+        val timetable = runBlocking { sdk.getTimetableNormal(getLocalDate(2018, 9, 17)) }
 
         timetable[0].run {
             assertEquals(1, number)
@@ -391,7 +392,7 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun realizedTest() {
-        val realized = runBlocking { api.getCompletedLessons(getLocalDate(2018, 9, 17)) }
+        val realized = runBlocking { sdk.getCompletedLessons(getLocalDate(2018, 9, 17)) }
 
         realized[0].run {
             assertEquals(getDate(2018, 9, 17), date)
@@ -406,14 +407,14 @@ class ScrapperRemoteTest : BaseTest() {
 
     @Test
     fun luckyNumberTest() {
-        val luckyNumber = runBlocking { api.getKidsLuckyNumbers() }
+        val luckyNumber = runBlocking { sdk.getKidsLuckyNumbers() }
 
         assertEquals(37, luckyNumber[0].number)
     }
 
     @Test
     fun freeDays() {
-        val freeDays = runBlocking { api.getFreeDays() }
+        val freeDays = runBlocking { sdk.getFreeDays() }
         assertEquals(2, freeDays.size)
     }
 }

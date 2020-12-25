@@ -11,17 +11,17 @@ import java.time.LocalDate.of
 class SemesterMapperTest : BaseLocalTest() {
 
     private val mobile by lazy {
-        Sdk().apply {
+        Sdk.Builder().apply {
             mode = Sdk.Mode.API
             mobileBaseUrl = server.url("/").toString()
-        }
+            studentId = 1
+        }.build()
     }
 
     @Test
     fun getStudents_api2() {
         server.enqueueAndStart("ListaUczniow.json", RegisterTest::class.java)
 
-        mobile.studentId = 1
         val semesters = runBlocking { mobile.getSemesters() }
         assertEquals(2, semesters.size)
 
@@ -39,7 +39,6 @@ class SemesterMapperTest : BaseLocalTest() {
     fun getStudents_api1() {
         server.enqueueAndStart("ListaUczniow-2.json", RegisterTest::class.java)
 
-        mobile.studentId = 1
         val semesters = runBlocking { mobile.getSemesters() }
         assertEquals(2, semesters.size)
 

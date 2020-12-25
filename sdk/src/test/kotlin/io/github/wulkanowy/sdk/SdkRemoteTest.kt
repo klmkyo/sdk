@@ -2,6 +2,8 @@ package io.github.wulkanowy.sdk
 
 import io.github.wulkanowy.sdk.pojo.Folder
 import kotlinx.coroutines.runBlocking
+import okhttp3.Interceptor
+import okhttp3.logging.HttpLoggingInterceptor
 import org.junit.Assert.assertEquals
 import org.junit.Ignore
 import org.junit.Test
@@ -20,17 +22,19 @@ class SdkRemoteTest {
 
     @Test
     fun getStudents_api() {
-        val sdk = Sdk()
-        sdk.setSimpleHttpLogger { println(it) }
+        val sdk = Sdk.Builder().apply {
+            mode = Sdk.Mode.API
+            interceptors.add(HttpLoggingInterceptor { println(it) } to true)
+        }.build()
         val students = runBlocking { sdk.getStudentsFromMobileApi(token = "FK100000", pin = "999999", symbol = "powiatwulkanowy", apiKey = API_KEY, firebaseToken = "") }
         assertEquals(2, students.size)
     }
 
     @Test
     fun getStudents_scrapper() {
-        val sdk = Sdk().apply {
-            // mode = Sdk.Mode.SCRAPPER
-        }
+        val sdk = Sdk.Builder().apply {
+            mode = Sdk.Mode.SCRAPPER
+        }.build()
 
         val students = runBlocking { sdk.getStudentsFromScrapper(email = "jan@fakelog.cf", password = "jan123", scrapperBaseUrl = "http://fakelog.cf", symbol = "powiatwulkanowy") }
         assertEquals(6, students.size)
@@ -38,17 +42,17 @@ class SdkRemoteTest {
 
     @Test
     fun getStudents_hybrid() {
-        val sdk = Sdk().apply {
-            // mode = Sdk.Mode.HYBRID
-        }
+        val sdk = Sdk.Builder().apply {
+            mode = Sdk.Mode.HYBRID
+        }.build()
 
-        val students = runBlocking { sdk.getStudentsHybrid(email = "jan@fakelog.cf", password = "jan123", apiKey = API_KEY, scrapperBaseUrl = "http://fakelog.cf", startSymbol = "powiatwulkanowy", firebaseToken = "") }
-        assertEquals(6, students.size)
+        val students = runBlocking { sdk.getStudentsHybrid(email = "jan@fakelog.cf", password = "jan123", apiKey = API_KEY, scrapperBaseUrl = "http://fakelog.cf/", startSymbol = "powiatwulkanowy", firebaseToken = "") }
+        assertEquals(2, students.size)
     }
 
     @Test
     fun getSemesters_api() {
-        val sdk = Sdk().apply {
+        val sdk = Sdk.Builder().apply {
             privateKey = PRIVATE_KEY
             certKey = CERT_KEY
 
@@ -59,7 +63,7 @@ class SdkRemoteTest {
             schoolSymbol = "123456"
             studentId = 1
             classId = 14
-        }
+        }.build()
 
         val semesters = runBlocking { sdk.getSemesters() }
         assertEquals(2, semesters.size)
@@ -67,7 +71,7 @@ class SdkRemoteTest {
 
     @Test
     fun getGrades_api() {
-        val sdk = Sdk().apply {
+        val sdk = Sdk.Builder().apply {
             privateKey = PRIVATE_KEY
             certKey = CERT_KEY
 
@@ -78,7 +82,7 @@ class SdkRemoteTest {
             schoolSymbol = "123456"
             studentId = 15
             classId = 14
-        }
+        }.build()
 
         val grades = runBlocking { sdk.getGradesDetails(1) }
         assertEquals(22, grades.size)
@@ -86,7 +90,7 @@ class SdkRemoteTest {
 
     @Test
     fun getGrades_scrapper() {
-        val sdk = Sdk().apply {
+        val sdk = Sdk.Builder().apply {
             privateKey = PRIVATE_KEY
 
             mode = Sdk.Mode.SCRAPPER
@@ -102,7 +106,7 @@ class SdkRemoteTest {
             scrapperBaseUrl = "http://fakelog.cf"
             email = "jan@fakelog.cf"
             password = "jan123"
-        }
+        }.build()
 
         val grades = runBlocking { sdk.getGradesDetails(1) }
         assertEquals(22, grades.size)
@@ -110,7 +114,7 @@ class SdkRemoteTest {
 
     @Test
     fun getGradesSummary_api() {
-        val sdk = Sdk().apply {
+        val sdk = Sdk.Builder().apply {
             privateKey = PRIVATE_KEY
             certKey = CERT_KEY
 
@@ -121,7 +125,7 @@ class SdkRemoteTest {
             schoolSymbol = "123456"
             studentId = 15
             classId = 14
-        }
+        }.build()
 
         val grades = runBlocking { sdk.getGradesSummary(1) }
         assertEquals(4, grades.size)
@@ -129,7 +133,7 @@ class SdkRemoteTest {
 
     @Test
     fun getAttendance_api() {
-        val sdk = Sdk().apply {
+        val sdk = Sdk.Builder().apply {
             privateKey = PRIVATE_KEY
             certKey = CERT_KEY
 
@@ -140,7 +144,7 @@ class SdkRemoteTest {
             schoolSymbol = "123456"
             studentId = 15
             classId = 14
-        }
+        }.build()
 
         val attendance = runBlocking { sdk.getAttendance(of(2018, 1, 1), of(2018, 1, 2), 1) }
         assertEquals(24, attendance.size)
@@ -148,7 +152,7 @@ class SdkRemoteTest {
 
     @Test
     fun getSubjects_api() {
-        val sdk = Sdk().apply {
+        val sdk = Sdk.Builder().apply {
             privateKey = PRIVATE_KEY
             certKey = CERT_KEY
 
@@ -159,15 +163,15 @@ class SdkRemoteTest {
             schoolSymbol = "123456"
             studentId = 15
             classId = 14
-        }
+        }.build()
 
         val subjects = runBlocking { sdk.getSubjects() }
-        assertEquals(14, subjects.size)
+        assertEquals(15, subjects.size)
     }
 
     @Test
     fun getNotes_api() {
-        val sdk = Sdk().apply {
+        val sdk = Sdk.Builder().apply {
             privateKey = PRIVATE_KEY
             certKey = CERT_KEY
 
@@ -178,7 +182,7 @@ class SdkRemoteTest {
             schoolSymbol = "123456"
             studentId = 15
             classId = 14
-        }
+        }.build()
 
         val notes = runBlocking { sdk.getNotes(1) }
         assertEquals(5, notes.size)
@@ -186,7 +190,7 @@ class SdkRemoteTest {
 
     @Test
     fun getTeachers_api() {
-        val sdk = Sdk().apply {
+        val sdk = Sdk.Builder().apply {
             privateKey = PRIVATE_KEY
             certKey = CERT_KEY
 
@@ -197,7 +201,7 @@ class SdkRemoteTest {
             schoolSymbol = "123456"
             studentId = 15
             classId = 14
-        }
+        }.build()
 
         val teachers = runBlocking { sdk.getTeachers(1) }
         assertEquals(9, teachers.size)
@@ -205,7 +209,7 @@ class SdkRemoteTest {
 
     @Test
     fun getHomework_api() {
-        val sdk = Sdk().apply {
+        val sdk = Sdk.Builder().apply {
             privateKey = PRIVATE_KEY
             certKey = CERT_KEY
 
@@ -216,15 +220,15 @@ class SdkRemoteTest {
             schoolSymbol = "123456"
             studentId = 15
             classId = 14
-        }
+        }.build()
 
         val homework = runBlocking { sdk.getHomework(of(2018, 1, 1), of(2018, 1, 2)) }
-        assertEquals(4, homework.size)
+        assertEquals(5, homework.size)
     }
 
     @Test
     fun getTimetable_api() {
-        val sdk = Sdk().apply {
+        val sdk = Sdk.Builder().apply {
             privateKey = PRIVATE_KEY
             certKey = CERT_KEY
 
@@ -235,15 +239,15 @@ class SdkRemoteTest {
             schoolSymbol = "123456"
             studentId = 15
             classId = 14
-        }
+        }.build()
 
         val (timetable) = runBlocking { sdk.getTimetable(of(2018, 1, 1), of(2018, 1, 2)) }
-        assertEquals(24, timetable.size)
+        assertEquals(29, timetable.size)
     }
 
     @Test
     fun getMessages_api() {
-        val sdk = Sdk().apply {
+        val sdk = Sdk.Builder().apply {
             privateKey = PRIVATE_KEY
             certKey = CERT_KEY
 
@@ -254,7 +258,7 @@ class SdkRemoteTest {
             schoolSymbol = "123456"
             studentId = 15
             classId = 14
-        }
+        }.build()
 
         val messages = runBlocking { sdk.getMessages(Folder.RECEIVED, LocalDateTime.of(2018, 1, 1, 0, 0, 0), LocalDateTime.of(2018, 1, 2, 0, 0, 0)) }
         assertEquals(2, messages.size)
@@ -268,7 +272,7 @@ class SdkRemoteTest {
 
     @Test
     fun readMessage_api() {
-        val sdk = Sdk().apply {
+        val sdk = Sdk.Builder().apply {
             privateKey = PRIVATE_KEY
             certKey = CERT_KEY
 
@@ -280,15 +284,15 @@ class SdkRemoteTest {
             loginId = 16
             studentId = 15
             classId = 14
-        }
+        }.build()
 
         val message = runBlocking { sdk.getMessageDetails(1, 2, true, 1) }
-        assertEquals("Zmiana statusu wiadomości.", message)
+        assertEquals("Zmiana statusu wiadomości.", message.content)
     }
 
     @Test
     fun deleteMessage_api() {
-        val sdk = Sdk().apply {
+        val sdk = Sdk.Builder().apply {
             privateKey = PRIVATE_KEY
             certKey = CERT_KEY
 
@@ -300,7 +304,7 @@ class SdkRemoteTest {
             loginId = 16
             studentId = 15
             classId = 14
-        }
+        }.build()
 
         val isDeleted = runBlocking { sdk.deleteMessages(listOf(1, 2), 1) }
         assertEquals(true, isDeleted)

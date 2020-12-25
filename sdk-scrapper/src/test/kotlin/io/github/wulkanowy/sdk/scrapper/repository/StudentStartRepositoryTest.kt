@@ -12,7 +12,7 @@ import org.junit.Test
 class StudentStartRepositoryTest : BaseLocalTest() {
 
     private val api by lazy {
-        Scrapper().apply {
+        Scrapper.Builder().apply {
             ssl = false
             loginType = Scrapper.LoginType.STANDARD
             host = "fakelog.localhost:3000" //
@@ -29,10 +29,12 @@ class StudentStartRepositoryTest : BaseLocalTest() {
         server.enqueue(MockResponse().setBody(RegisterTest::class.java.getResource("UczenDziennik.json").readText()))
         server.start(3000) //
 
-        api.studentId = 1
-        api.classId = 1
-
-        val semesters = runBlocking { api.getSemesters() }
+        val semesters = runBlocking {
+            api.build {
+                studentId = 1
+                classId = 1
+            }.getSemesters()
+        }
 
         assertEquals(6, semesters.size)
 
@@ -51,10 +53,12 @@ class StudentStartRepositoryTest : BaseLocalTest() {
         server.enqueue(MockResponse().setBody(RegisterTest::class.java.getResource("UczenDziennik.json").readText()))
         server.start(3000) //
 
-        api.studentId = 1
-        api.classId = 2 //
-
-        val semesters = runBlocking { api.getSemesters() }
+        val semesters = runBlocking {
+            api.build {
+                studentId = 1
+                classId = 2 //
+            }.getSemesters()
+        }
 
         assertEquals(0, semesters.size)
     }
@@ -64,10 +68,12 @@ class StudentStartRepositoryTest : BaseLocalTest() {
         server.enqueue(MockResponse().setBody(RegisterTest::class.java.getResource("UczenDziennik-multi.json").readText()))
         server.start(3000) //
 
-        api.studentId = 3881
-        api.classId = 121
-
-        val semesters = runBlocking { api.getSemesters() }
+        val semesters = runBlocking {
+            api.build {
+                studentId = 3881
+                classId = 121
+            }.getSemesters()
+        }
 
         assertEquals(2, semesters.size)
 
@@ -80,10 +86,12 @@ class StudentStartRepositoryTest : BaseLocalTest() {
         server.enqueue(MockResponse().setBody(RegisterTest::class.java.getResource("UczenDziennik.json").readText()))
         server.start(3000) //
 
-        api.studentId = 2
-        api.classId = 2
-
-        val semesters = runBlocking { api.getSemesters() }
+        val semesters = runBlocking {
+            api.build {
+                studentId = 2
+                classId = 2
+            }.getSemesters()
+        }
 
         assertEquals(6, semesters.size)
 
@@ -101,13 +109,13 @@ class StudentStartRepositoryTest : BaseLocalTest() {
         server.enqueue(MockResponse().setBody(RegisterTest::class.java.getResource("UczenDziennik.json").readText()))
         server.start(3000) //
 
-        with(api) {
-            studentId = 1
-            classId = 1
-            loginType = Scrapper.LoginType.STANDARD
+        val semesters = runBlocking {
+            api.build {
+                studentId = 1
+                classId = 1
+                loginType = Scrapper.LoginType.STANDARD
+            }.getSemesters()
         }
-
-        val semesters = runBlocking { api.getSemesters() }
 
         assertEquals(6, semesters.size)
 
@@ -127,13 +135,13 @@ class StudentStartRepositoryTest : BaseLocalTest() {
         server.enqueue(MockResponse().setBody(RegisterTest::class.java.getResource("UczenDziennik.json").readText()))
         server.start(3000) //
 
-        with(api) {
-            studentId = 1
-            classId = 1
-            loginType = Scrapper.LoginType.ADFS
+        val semesters = runBlocking {
+            api.build {
+                studentId = 1
+                classId = 1
+                loginType = Scrapper.LoginType.ADFS
+            }.getSemesters()
         }
-
-        val semesters = runBlocking { api.getSemesters() }
 
         assertEquals(6, semesters.size)
 
@@ -152,13 +160,13 @@ class StudentStartRepositoryTest : BaseLocalTest() {
         server.enqueue(MockResponse().setBody(RegisterTest::class.java.getResource("UczenDziennik.json").readText()))
         server.start(3000) //
 
-        with(api) {
-            studentId = 1
-            classId = 1
-            loginType = Scrapper.LoginType.ADFSLight
+        val semesters = runBlocking {
+            api.build {
+                studentId = 1
+                classId = 1
+                loginType = Scrapper.LoginType.ADFSLight
+            }.getSemesters()
         }
-
-        val semesters = runBlocking { api.getSemesters() }
 
         assertEquals(6, semesters.size)
 
@@ -179,13 +187,13 @@ class StudentStartRepositoryTest : BaseLocalTest() {
         server.enqueue(MockResponse().setBody(RegisterTest::class.java.getResource("UczenDziennik.json").readText()))
         server.start(3000) //
 
-        with(api) {
-            studentId = 1
-            classId = 1
-            loginType = Scrapper.LoginType.ADFSCards
+        val semesters = runBlocking {
+            api.build {
+                studentId = 1
+                classId = 1
+                loginType = Scrapper.LoginType.ADFSCards
+            }.getSemesters()
         }
-
-        val semesters = runBlocking { api.getSemesters() }
 
         assertEquals(6, semesters.size)
 

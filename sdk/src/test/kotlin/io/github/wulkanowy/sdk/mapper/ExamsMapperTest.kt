@@ -11,10 +11,10 @@ import java.time.LocalDate.now
 class ExamsMapperTest : BaseLocalTest() {
 
     private val mobile by lazy {
-        Sdk().apply {
+        Sdk.Builder().apply {
             mode = Sdk.Mode.API
             mobileBaseUrl = server.url("/").toString()
-        }
+        }.build()
     }
 
     @Test

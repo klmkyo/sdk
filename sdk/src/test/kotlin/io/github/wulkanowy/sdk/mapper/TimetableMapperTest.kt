@@ -12,10 +12,10 @@ import java.time.LocalDateTime
 class TimetableMapperTest : BaseLocalTest() {
 
     private val mobile by lazy {
-        Sdk().apply {
+        Sdk.Builder().apply {
             mode = Sdk.Mode.API
             mobileBaseUrl = server.url("/").toString()
-        }
+        }.build()
     }
 
     @Test

@@ -56,7 +56,7 @@ class Mobile {
             resettableManager.reset()
         }
 
-    var baseUrl = ""
+    var mobileBaseUrl = ""
         set(value) {
             field = value
             resettableManager.reset()
@@ -67,8 +67,10 @@ class Mobile {
             field = value
             resettableManager.reset()
         }
+    var androidVersion = "8.1.0"
+    var buildTag = "SM-J500H Build/LMY48B"
 
-    private val serviceManager by resettableLazy(resettableManager) { RepositoryManager(logLevel, privateKey, certKey, interceptors, baseUrl, schoolSymbol) }
+    private val serviceManager by resettableLazy(resettableManager) { RepositoryManager(logLevel, privateKey, certKey, interceptors, mobileBaseUrl, schoolSymbol) }
 
     private val routes by resettableLazy(resettableManager) { serviceManager.getRoutesRepository() }
 
@@ -89,9 +91,9 @@ class Mobile {
             .apply { dictionaries = this }
     }
 
-    suspend fun getCertificate(token: String, pin: String, symbol: String, deviceName: String, androidVer: String, firebaseToken: String): CertificateResponse {
+    suspend fun getCertificate(token: String, pin: String, symbol: String, firebaseToken: String): CertificateResponse {
         val baseUrl = routes.getRouteByToken(token)
-        return serviceManager.getRegisterRepository(baseUrl, symbol).getCertificate(token, pin, deviceName, androidVer, firebaseToken)
+        return serviceManager.getRegisterRepository(baseUrl, symbol).getCertificate(token, pin, buildTag, androidVersion, firebaseToken)
     }
 
     suspend fun getStudents(certRes: CertificateResponse, apiKey: String = ""): List<Student> {
@@ -107,7 +109,7 @@ class Mobile {
 
         val cert = certRes.tokenCert!!
         certKey = cert.certificateKey
-        baseUrl = cert.baseUrl.removeSuffix("/")
+        mobileBaseUrl = cert.baseUrl.removeSuffix("/")
         privateKey = getPrivateKeyFromCert(apiKey.ifEmpty {
             Base64.decode(if (cert.baseUrl.contains("fakelog")) "KDAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OUFCKQ==" else "KENFNzVFQTU5OEM3NzQzQUQ5QjBCNzMyOERFRDg1QjA2KQ==")
                 .toString(Charset.defaultCharset())
@@ -118,13 +120,13 @@ class Mobile {
             it.copy().apply {
                 certificateKey = this@Mobile.certKey
                 privateKey = this@Mobile.privateKey
-                mobileBaseUrl = this@Mobile.baseUrl
+                mobileBaseUrl = this@Mobile.mobileBaseUrl
             }
         }
     }
 
     suspend fun getStudents(): List<Student> {
-        return serviceManager.getRegisterRepository(baseUrl).getStudents()
+        return serviceManager.getRegisterRepository(mobileBaseUrl).getStudents()
     }
 
     suspend fun getAttendance(start: LocalDate, end: LocalDate, classificationPeriodId: Int): List<Attendance> {

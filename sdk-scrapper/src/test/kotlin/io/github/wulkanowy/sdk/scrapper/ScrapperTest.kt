@@ -5,6 +5,7 @@ import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import org.junit.Test
 
+// TODO: rethink
 class ScrapperTest : BaseLocalTest() {
 
     @Test
@@ -12,7 +13,7 @@ class ScrapperTest : BaseLocalTest() {
         server.enqueue(MockResponse().setBody(AttendanceSummaryTest::class.java.getResource("Przedmioty.json").readText()))
         server.start(3000) //
 
-        val api = Scrapper().apply {
+        val api = Scrapper.Builder().build {
             loginType = Scrapper.LoginType.STANDARD
             ssl = false
             host = "fakelog.localhost" //
@@ -31,7 +32,7 @@ class ScrapperTest : BaseLocalTest() {
         }
 
         api.apply {
-            host = "fakelog.localhost:3000" //
+            // host = "fakelog.localhost:3000" //
         }
 
         try {
