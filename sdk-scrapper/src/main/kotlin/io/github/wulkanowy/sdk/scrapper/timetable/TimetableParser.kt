@@ -63,7 +63,7 @@ class TimetableParser {
                     )
                 }
             }
-            divs.size == 2 -> getLessonInfo(lesson, divs[0])
+            divs.size == 2 -> getLessonInfo(lesson, divs[1])
             divs.size == 3 -> when { // TODO: refactor this
                 divs[0]?.selectFirst("span")?.hasClass(CLASS_CHANGES) == true &&
                     divs[1]?.selectFirst("span")?.hasClass(CLASS_MOVED_OR_CANCELED) == true &&
